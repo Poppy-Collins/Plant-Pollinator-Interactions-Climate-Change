@@ -1,0 +1,241 @@
+---
+title: "FlwPhen_2013_DataCleaning"
+author: "P.Collins"
+date: "13/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Loading Data
+
+```{r load data}
+dat = read.csv("C:/Users/Poppy/Dropbox/Data/2013_Survey/Raw Data/2013Floweringdatasheet.csv", skip = 1)
+date.vec = read.csv("C:/Users/Poppy/Dropbox/Data/2013_Survey/Raw Data/2013Floweringdatasheet.csv",nrows=1,header=F)
+```
+
+# Date Tidy
+
+## Extract Dates from Vector
+```{r sorting dates}
+month = substr(date.vec,nchar(date.vec)-3,nchar(date.vec)-2)
+day = substr(date.vec,nchar(date.vec)-5,nchar(date.vec)-4)
+Date = as.Date(paste(month,day,"2013",sep="-"),format="%m-%d-%Y")
+spp.vec =  substr(names(dat),1,regexpr("\\.",paste(names(dat),".",sep=""))-1)
+```
+
+## Check for Date Errors
+```{r errors month}
+
+ddmm = substr(date.vec,nchar(date.vec)-5,nchar(date.vec)-2)
+unique(ddmm) #ideally these should all be dd-mm but as you can see some are d-mm and some of the months have errors we need to unpick these
+
+month = substr(date.vec,nchar(date.vec)-3,nchar(date.vec)-2)
+unique(month) # the errors here are "27", "97", "68", "03", "17". While 03 is a valid month, sampling did not start until 04 thus suggesting an error.
+
+day = substr(date.vec,nchar(date.vec)-5,nchar(date.vec)-4)
+unique(day)
+```
+First output is ddmm, some of these numbers do not conform to the expected format, for example, 2917, as 17 is not a valid month.
+Second output is month of which there are three errors, "27" "97" "68".
+Third output is day, of which there are no striking errors when taken alone but the errors in the second oupt suggest there might be some errors here too.
+
+Lets start by looking at the error "27". We could assume the 2 was a misclick, however, checking the print out of unique(ddmm), the "27" appears as part of "227". The existence of "2207" suggests instead that the 0 was missed. So we need to add this in and make sure that the day is counted correctly as 22 not 2.
+
+There is also a cell without a date but we won't remove that for now.
+```{r correcting date errors}
+date.alt <- date.vec #duplicate to alter
+
+# 27 is from 227 which should be 2207
+which(month==  "27") # find location
+date.alt[180] <- 220713 #fix month27
+
+# 97 is from 297 which should be 2907
+which(month==  "97") # find location, occurs twice
+date.alt[181] <- 290713 #fix month97
+date.alt[315] <- 290713 #fix month97
+
+# 68 is from 268 which should be 2608 
+which(month==  "68") # find location
+date.alt[212] <- 260813 #fix month68
+
+# 03 should be 06 as that is the only occurrence of the 24 day
+which(month==  "03") # find location
+date.alt[231] <- 240613 #fix month03
+
+# 17 is from 2917 which should be 2907
+which(month==  "17") # find location
+date.alt[236] <- 290713 #fix month17
+
+```
+
+```{r errors fixed}
+month02 = substr(date.alt,nchar(date.alt)-3,nchar(date.alt)-2)
+unique(month02) #Check that months have been fixed by reviewing uniques
+```
+## Create New Date Vector
+
+```{r make date}
+month2 = substr(date.alt,nchar(date.alt)-3,nchar(date.alt)-2)
+day2 = substr(date.alt,nchar(date.alt)-5,nchar(date.alt)-4)
+Date2 = as.Date(paste(month2,day2,"2013",sep="-"),format="%m-%d-%Y")
+Date_sort2 <- sort(Date2, decreasing = FALSE)
+unique(Date_sort2)
+```
+
+# Unfolding Data
+
+
+```{r prep unfold}
+#unfold data for single y column of # flowers
+
+
+Block = NULL
+Plot = NULL
+Microsite = NULL
+Quadrat = NULL
+Treatment = NULL
+Soil_Depth = NULL
+Spp = NULL
+Date = NULL
+fn = NULL
+index = 1
+```
+
+
+
+```{r unfold and reform, echo=FALSE}
+for(i in 1:dim(dat)[1]) {
+for(j in 5:(dim(dat)[2]-1)) {
+		print(paste(i,j))
+		if(is.na(dat[i,j])) next
+		Block[index] = substr(dat$Plot[i],1,1)
+		Plot[index] = dat$Plot[i]
+		Quadrat[index] = as.character(dat$Microsite[i])
+		Microsite[index] = as.character(substr(dat$Microsite[i],1,3))
+		Treatment[index] = as.character(dat$Tmt[i])
+		Soil_Depth[index] = dat$Soil.Depth[i]
+  	Date[index] = Date2[j]
+		Spp[index] = spp.vec[j]
+		fn[index] = (dat[i,j]) 
+		index = index + 1	}}
+
+```
+
+```{r write csv}
+out = data.frame(Block, Plot, Microsite, Quadrat, Treatment,Soil_Depth,Date,Spp,fn)
+out$Day_of_Year = out$Date - 15705 #(15705 days between 01-01-1970 and 31-12-2012 -> converts date to day of the year)
+write.csv(out, "FlwPhenunstiched.csv", row.names = FALSE)
+Flwunstiched = read.csv("FlwPhenunstiched.csv")
+
+```
+
+
+# Removing empty rows & zeros
+Need to check for any potential issues in the flower number column (fn)
+
+```{r checking for issues in fn}
+unique(Flwunstiched$fn)
+```
+Some interesting values here. We don't want blanks ("") of values which include punctuation marks so we shall remove them.We are not using zero values in this analysis so zeros will also need removing. Values which include questions marks will have the ? mark removed to return the value.
+```{r fixing fn}
+#new df to make changes
+outNAs <- Flwunstiched
+
+outNAs$fn[outNAs$fn=="?"] <- ""
+outNAs$fn[outNAs$fn=="5?"] <- "5"
+outNAs$fn[outNAs$fn=="3s"] <- "3"
+outNAs$fn[outNAs$fn=="2?"] <- "2"
+outNAs$fn[outNAs$fn=="1?"] <- "1"
+
+library(dplyr)
+NoNas <- outNAs %>%
+  # recode empty strings "" by NAs
+  na_if("0") %>%
+   na_if("") %>%
+  # remove NAs
+  na.omit
+
+#check they've been fixed
+which(NoNas$fn == "") 
+which(NoNas$fn == "0")
+which(NoNas$fn == "?")
+unique(NoNas$fn)
+
+NoNas$fn = as.numeric(NoNas$fn) #make numeric now that the characters have been removed
+```
+
+# Species abbreviations
+
+The two letter abbreviations are confusing and their might be errors.
+
+```{r checking species}
+unique(NoNas$Spp) #some errors
+```
+To check if there are errors or unknown species, potential issues were checked against location in the original spreadsheet, as data was written by species, if an error occurs next to or within a section of another abbreviations we can relatively safely assume it is a typo rather than a separate species. Errors which conform to this include
+- Pveris which occurs at the beginning and end of the Pv section.
+- Li which occurs within Ll
+- LzC & Luzc which occur alongside the Lz section
+
+- Bp however does not occur alongside any of the known species. It has very low frequency and I am wondering if it is Brachypodium, which as an introduced species to Buxton will not be included in analysis.
+
+To correct these errors and make the abbreviations more easily recognisable the following table will be used.
+
+
+```{r new abbreviations}
+new_abbr <- read.csv("Buxton_sppabbr.csv")
+#corrected abbreviations and forms added
+flower2013_nabrr <- merge(NoNas, new_abbr, by="Spp")
+```
+
+
+# Treatment Reformat
+
+```{r treatment reform}
+library(tibble)
+library(dplyr)
+library(readr)
+
+Flower2013_Wtreat <- flower2013_nabrr %>%
+  mutate(Water = case_when(
+    endsWith(Treatment, "W") ~ "1",
+    endsWith(Treatment, "D") ~ "-1",
+    endsWith(Treatment, "H") ~ "0",
+    endsWith(Treatment, "C") ~ "0"
+    ))
+Flower2013_Htreat <- Flower2013_Wtreat %>%
+  mutate(Heat = case_when(
+    startsWith(Treatment, "H") ~ "1",
+    startsWith(Treatment, "W") ~ "0",
+    startsWith(Treatment, "D") ~ "0",
+    startsWith(Treatment, "C") ~ "0"
+    ))
+
+median(Flower2013_Htreat$Soil_Depth)
+
+#11.6
+
+Flower2013_Htreat$depthhalf <- ifelse(Flower2013_Htreat$Soil_Depth > median(Flower2013_Htreat$Soil_Depth), 1, 0)
+
+#Shallow = 0
+#Deep = 1
+
+```
+
+
+# Final Steps
+
+```{r change date to ddmmyy}
+
+flower2013_nabrr$Date <- as.Date(flower2013_nabrr$Date,origin = "1970-01-01")
+Flower2013_Htreat$Date <- as.Date(flower2013_nabrr$Date,origin = "1970-01-01")
+
+```
+
+```{r output file}
+write.csv(flower2013_nabrr, "FlwPhen2013.csv", row.names = FALSE)
+write.csv(Flower2013_Htreat, "FlwPhen2013v2.csv", row.names = FALSE)
+```
+
