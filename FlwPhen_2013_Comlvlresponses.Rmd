@@ -1,0 +1,127 @@
+---
+title: "FlwPhen_2013_Comlvlresponses"
+author: "P.Collins"
+date: "01/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Make sure brm models from Spplvlresponses are present in the workspace prior to running this script.
+
+
+```{r packages}
+#install.packages("brms")
+library(brms)
+library("rstan")
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
+```
+ Create standard error function
+```{r standard error}
+standard_error <- function(x) sd(x) / sqrt(length(x))
+```
+ 
+
+
+
+
+# Flowering durations & water in community by traits.
+
+```{r postierers to sd}
+posts_Agros_sp._dur_w <- as_draws_array(brm.agros.dur, variable = "b_Water")
+posts_Antho_odo_dur_w <- as_draws_array(brm.Antho_odo.dur, variable = "b_Water")
+posts_Briza_med_dur_w <- as_draws_array(brm.Briza_med.dur, variable = "b_Water")
+posts_Carex_car_dur_w <- as_draws_array(brm.Carex_car.dur, variable = "b_Water")
+posts_Carex_fla_dur_w <- as_draws_array(brm.Carex_fla.dur, variable = "b_Water")
+posts_Carex_pan_dur_w <- as_draws_array(brm.Carex_pan.dur, variable = "b_Water")
+posts_Carex_pul_dur_w <- as_draws_array(brm.Carex_pul.dur, variable = "b_Water")
+posts_Danth_dec_dur_w <- as_draws_array(brm.Danth_dec.dur, variable = "b_Water")
+posts_Festu_ovi_dur_w <- as_draws_array(brm.Festu_ovi.dur, variable = "b_Water")
+posts_Helic_pra_dur_w <- as_draws_array(brm.Helic_pra.dur, variable = "b_Water")
+posts_Koele_mac_dur_w <- as_draws_array(brm.Koele_mac.dur, variable = "b_Water")
+posts_Linum_cat_dur_w <- as_draws_array(brm.Linum_cat.dur, variable = "b_Water")
+posts_Lotus_cor_dur_w <- as_draws_array(brm.Lotus_cor.dur, variable = "b_Water")
+posts_Poten_ere_dur_w <- as_draws_array(brm.Poten_ere.dur, variable = "b_Water")
+posts_Plant_lan_dur_w <- as_draws_array(brm.Plant_lan.dur, variable = "b_Water")
+posts_Scabi_col_dur_w <- as_draws_array(brm.Scabi_col.dur, variable = "b_Water")
+posts_Sangu_min_dur_w <- as_draws_array(brm.Sangu_min.dur, variable = "b_Water")
+
+posts_Agros_sp._dur_h <- as_draws_array(brm.agros.dur, variable = "b_Heat")
+posts_Antho_odo_dur_h <- as_draws_array(brm.Antho_odo.dur, variable = "b_Heat")
+posts_Briza_med_dur_h <- as_draws_array(brm.Briza_med.dur, variable = "b_Heat")
+posts_Carex_car_dur_h <- as_draws_array(brm.Carex_car.dur, variable = "b_Heat")
+posts_Carex_fla_dur_h <- as_draws_array(brm.Carex_fla.dur, variable = "b_Heat")
+posts_Carex_pan_dur_h <- as_draws_array(brm.Carex_pan.dur, variable = "b_Heat")
+posts_Carex_pul_dur_h <- as_draws_array(brm.Carex_pul.dur, variable = "b_Heat")
+posts_Danth_dec_dur_h <- as_draws_array(brm.Danth_dec.dur, variable = "b_Heat")
+posts_Festu_ovi_dur_h <- as_draws_array(brm.Festu_ovi.dur, variable = "b_Heat")
+posts_Helic_pra_dur_h <- as_draws_array(brm.Helic_pra.dur, variable = "b_Heat")
+posts_Koele_mac_dur_h <- as_draws_array(brm.Koele_mac.dur, variable = "b_Heat")
+posts_Linum_cat_dur_h <- as_draws_array(brm.Linum_cat.dur, variable = "b_Heat")
+posts_Lotus_cor_dur_h <- as_draws_array(brm.Lotus_cor.dur, variable = "b_Heat")
+posts_Poten_ere_dur_h <- as_draws_array(brm.Poten_ere.dur, variable = "b_Heat")
+posts_Plant_lan_dur_h <- as_draws_array(brm.Plant_lan.dur, variable = "b_Heat")
+posts_Scabi_col_dur_h <- as_draws_array(brm.Scabi_col.dur, variable = "b_Heat")
+posts_Sangu_min_dur_h <- as_draws_array(brm.Sangu_min.dur, variable = "b_Heat")
+
+posts_Agros_sp._dur_hw <- as_draws_array(brm.agros.dur, variable = "b_Water:Heat")
+posts_Antho_odo_dur_hw <- as_draws_array(brm.Antho_odo.dur, variable = "b_Water:Heat")
+posts_Briza_med_dur_hw <- as_draws_array(brm.Briza_med.dur, variable = "b_Water:Heat")
+posts_Carex_car_dur_hw <- as_draws_array(brm.Carex_car.dur, variable = "b_Water:Heat")
+posts_Carex_fla_dur_hw <- as_draws_array(brm.Carex_fla.dur, variable = "b_Water:Heat")
+posts_Carex_pan_dur_hw <- as_draws_array(brm.Carex_pan.dur, variable = "b_Water:Heat")
+posts_Carex_pul_dur_hw <- as_draws_array(brm.Carex_pul.dur, variable = "b_Water:Heat")
+posts_Danth_dec_dur_hw <- as_draws_array(brm.Danth_dec.dur, variable = "b_Water:Heat")
+posts_Festu_ovi_dur_hw <- as_draws_array(brm.Festu_ovi.dur, variable = "b_Water:Heat")
+posts_Helic_pra_dur_hw <- as_draws_array(brm.Helic_pra.dur, variable = "b_Water:Heat")
+posts_Koele_mac_dur_hw <- as_draws_array(brm.Koele_mac.dur, variable = "b_Water:Heat")
+posts_Linum_cat_dur_hw <- as_draws_array(brm.Linum_cat.dur, variable = "b_Water:Heat")
+posts_Lotus_cor_dur_hw <- as_draws_array(brm.Lotus_cor.dur, variable = "b_Water:Heat")
+posts_Poten_ere_dur_hw <- as_draws_array(brm.Poten_ere.dur, variable = "b_Water:Heat")
+posts_Plant_lan_dur_hw <- as_draws_array(brm.Plant_lan.dur, variable = "b_Water:Heat")
+posts_Scabi_col_dur_hw <- as_draws_array(brm.Scabi_col.dur, variable = "b_Water:Heat")
+posts_Sangu_min_dur_hw <- as_draws_array(brm.Sangu_min.dur, variable = "b_Water:Heat")
+
+
+
+Species <- c("Agros_sp.", "Antho_odo","Briza_med","Carex_car", "Carex_fla","Carex_pan","Carex_pul","Danth_dec","Festu_ovi","Helic_pra","Koele_mac","Linum_cat","Lotus_cor","Poten_ere","Plant_lan","Scabi_col","Sangu_min")
+b_Water  <- c(mean(posts_Agros_sp._dur_w),mean(posts_Antho_odo_dur_w),mean(posts_Briza_med_dur_w),mean(posts_Carex_car_dur_w),mean(posts_Carex_fla_dur_w),mean(posts_Carex_pan_dur_w),mean(posts_Carex_pul_dur_w),mean(posts_Danth_dec_dur_w),mean(posts_Festu_ovi_dur_w),mean(posts_Helic_pra_dur_w),mean(posts_Koele_mac_dur_w),mean(posts_Linum_cat_dur_w),mean(posts_Lotus_cor_dur_w),mean(posts_Poten_ere_dur_w),mean(posts_Plant_lan_dur_w),mean(posts_Scabi_col_dur_w),mean(posts_Sangu_min_dur_w))
+b_Water_se <- c(standard_error(posts_Agros_sp._dur_w),standard_error(posts_Antho_odo_dur_w),standard_error(posts_Briza_med_dur_w),standard_error(posts_Carex_car_dur_w),standard_error(posts_Carex_fla_dur_w),standard_error(posts_Carex_pan_dur_w),standard_error(posts_Carex_pul_dur_w),standard_error(posts_Danth_dec_dur_w),standard_error(posts_Festu_ovi_dur_w),standard_error(posts_Helic_pra_dur_w),standard_error(posts_Koele_mac_dur_w),standard_error(posts_Linum_cat_dur_w),standard_error(posts_Lotus_cor_dur_w),standard_error(posts_Poten_ere_dur_w),standard_error(posts_Plant_lan_dur_w),standard_error(posts_Scabi_col_dur_w),standard_error(posts_Sangu_min_dur_w))
+
+b_Heat  <- c(mean(posts_Agros_sp._dur_h),mean(posts_Antho_odo_dur_h),mean(posts_Briza_med_dur_h),mean(posts_Carex_car_dur_h),mean(posts_Carex_fla_dur_h),mean(posts_Carex_pan_dur_h),mean(posts_Carex_pul_dur_h),mean(posts_Danth_dec_dur_h),mean(posts_Festu_ovi_dur_h),mean(posts_Helic_pra_dur_h),mean(posts_Koele_mac_dur_h),mean(posts_Linum_cat_dur_h),mean(posts_Lotus_cor_dur_h),mean(posts_Poten_ere_dur_h),mean(posts_Plant_lan_dur_h),mean(posts_Scabi_col_dur_h),mean(posts_Sangu_min_dur_h))
+b_Heat_se <- c(standard_error(posts_Agros_sp._dur_h),standard_error(posts_Antho_odo_dur_h),standard_error(posts_Briza_med_dur_h),standard_error(posts_Carex_car_dur_h),standard_error(posts_Carex_fla_dur_h),standard_error(posts_Carex_pan_dur_h),standard_error(posts_Carex_pul_dur_h),standard_error(posts_Danth_dec_dur_h),standard_error(posts_Festu_ovi_dur_h),standard_error(posts_Helic_pra_dur_h),standard_error(posts_Koele_mac_dur_h),standard_error(posts_Linum_cat_dur_h),standard_error(posts_Lotus_cor_dur_h),standard_error(posts_Poten_ere_dur_h),standard_error(posts_Plant_lan_dur_h),standard_error(posts_Scabi_col_dur_h),standard_error(posts_Sangu_min_dur_h))
+
+b_heatwater  <- c(mean(posts_Agros_sp._dur_hw),mean(posts_Antho_odo_dur_hw),mean(posts_Briza_med_dur_hw),mean(posts_Carex_car_dur_hw),mean(posts_Carex_fla_dur_hw),mean(posts_Carex_pan_dur_hw),mean(posts_Carex_pul_dur_hw),mean(posts_Danth_dec_dur_hw),mean(posts_Festu_ovi_dur_hw),mean(posts_Helic_pra_dur_hw),mean(posts_Koele_mac_dur_hw),mean(posts_Linum_cat_dur_hw),mean(posts_Lotus_cor_dur_hw),mean(posts_Poten_ere_dur_hw),mean(posts_Plant_lan_dur_hw),mean(posts_Scabi_col_dur_hw),mean(posts_Sangu_min_dur_hw))
+b_heatwater_se <- c(standard_error(posts_Agros_sp._dur_hw),standard_error(posts_Antho_odo_dur_hw),standard_error(posts_Briza_med_dur_hw),standard_error(posts_Carex_car_dur_hw),standard_error(posts_Carex_fla_dur_hw),standard_error(posts_Carex_pan_dur_hw),standard_error(posts_Carex_pul_dur_hw),standard_error(posts_Danth_dec_dur_hw),standard_error(posts_Festu_ovi_dur_hw),standard_error(posts_Helic_pra_dur_hw),standard_error(posts_Koele_mac_dur_hw),standard_error(posts_Linum_cat_dur_hw),standard_error(posts_Lotus_cor_dur_hw),standard_error(posts_Poten_ere_dur_hw),standard_error(posts_Plant_lan_dur_hw),standard_error(posts_Scabi_col_dur_hw),standard_error(posts_Sangu_min_dur_hw))
+
+form <- c("grass","grass", "grass", "sedge", "sedge", "sedge","sedge", "grass","grass","grass","grass", "forb", "forb", "forb", "forb", "forb", "forb" )
+
+dur_com_rsp <- data.frame(Species, b_Water, b_Water_se, b_Heat, b_Heat_se, b_heatwater, b_heatwater_se, form)
+
+
+```
+
+
+
+
+```{r}
+dur_water <- brm(data = dur_com_rsp, family = gaussian,
+      b_Water ~ 1,
+      prior = c(prior(normal(0, 1), class = Intercept)),
+      iter = 2000, warmup = 500, cores = 3, chains = 3)
+```
+
+```{r}
+dur_waterform <- brm(data = dur_com_rsp, family = gaussian,
+      b_Water  ~ form + (1|Species),
+      prior = c(prior(normal(0, 1), class = Intercept)),
+      iter = 2000, warmup = 500, cores = 3, chains = 3)
+```
+
+```{r}
+summary(dur_waterform)
+```
+
